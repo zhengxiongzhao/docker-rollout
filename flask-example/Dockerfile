@@ -1,5 +1,9 @@
-FROM python:3.9-slim-buster
+FROM python:3.9-slim-buster AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
+FROM python:3.9-slim-buster
 RUN apt-get update && \
     apt-get install -y --no-install-recommends  curl wget \
     iputils-ping \   
@@ -27,15 +31,17 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 从 builder 阶段复制安装好的依赖
+COPY --from=builder /root/.local /root/.local
+# 复制应用代码
+COPY src/ .
+COPY application.yaml .
 
-COPY . .
+# 确保 Python 能找到安装的包
+ENV PATH=/root/.local/bin:$PATH
 
 EXPOSE 5000
 EXPOSE 9999
 
-ENV XXL_JOB_EXECUTOR_PORT=9999
-
-CMD ["python", "src/app.py"]
+CMD ["python", "app.py"]
 # CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

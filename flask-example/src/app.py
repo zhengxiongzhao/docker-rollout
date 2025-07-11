@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import threading
+import yaml
 
 from flask import Flask, jsonify, request
 
@@ -12,6 +13,10 @@ from prometheus_client import Summary
 
 app = Flask(__name__)
 
+# Load configuration from YAML file
+with open('application.yaml', 'r') as f:
+    config = yaml.safe_load(f)
+
 xxl_handler = JobHandler()
 
 # Configure logging
@@ -20,7 +25,7 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 # Get environment variable
-API_KEY = os.environ.get("API_KEY", "default_api_key")
+API_KEY = os.environ.get("API_KEY", config.get('app', {}).get('api_key', 'default_api_key'))
 
 
 # Create a metric to track time spent and requests made.
@@ -53,9 +58,9 @@ def metrics():
     return data, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
-@xxl_handler.register(name="demo_job_handler")
+@xxl_handler.register(name="demoJobHandler")
 async def test_task3():
-    logging.info("------ [demo_job_handler] executing ------")
+    logging.info("------ [demoJobHandler] executing ------")
     return "Success"
     
 
@@ -63,24 +68,32 @@ def start_xxl_job_executor():
     """
     在一个新的线程中启动XXL-Job执行器
     """
-    print("XXL-Job Executor started in a background thread start.")
+    print("################### XXL-Job Executor started in a background thread start.")
     from multiprocessing import freeze_support
     freeze_support()
 
-    config = ExecutorConfig(
-        xxl_admin_baseurl="http://192.168.204.56:7070/xxl-job-admin/api/",
-        executor_app_name="flask-xxl-executor",
-        executor_listen_host="0.0.0.0",
-        executor_listen_port=9999,
-        access_token='default_token',
-        debug=True,
+    xxl_config = config.get('xxl', {})
+    executor_config = ExecutorConfig(
+        xxl_admin_baseurl=xxl_config.get('admin', {}).get('baseurl'),
+        executor_app_name=xxl_config.get('executor', {}).get('app_name'),
+        executor_listen_host=xxl_config.get('executor', {}).get('host'),
+        executor_listen_port=xxl_config.get('executor', {}).get('port'),
+        access_token=xxl_config.get('access_token'),
+        debug=bool(xxl_config.get('debug', False)),
     )
-    pyxxl_app = PyxxlRunner(config, handler=xxl_handler)
+    pyxxl_app = PyxxlRunner(executor_config, handler=xxl_handler)
     app.pyxxl_app = pyxxl_app
     pyxxl_app.run_with_daemon()
-    print("XXL-Job Executor started in a background thread end.")
+    print("################### XXL-Job Executor started in a background thread end.")
 
 if __name__ == '__main__':
     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
-        start_xxl_job_executor()
-    app.run(debug=False, host='0.0.0.0', port=5000)
+        if config.get('xxl', {}).get('enabled', False):
+            start_xxl_job_executor()
+    
+    app_config = config.get('app', {})
+    app.run(
+        host=app_config.get('host', '0.0.0.0'),
+        port=app_config.get('port', 5000),
+        debug=app_config.get('debug', False)
+    )

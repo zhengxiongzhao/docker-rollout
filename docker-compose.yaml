@@ -44,4 +44,3 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./stream.conf:/etc/nginx/toplevel.conf.d/stream.conf:ro
-      # - ../nginx.tmpl:/app/nginx.tmpl:ro 
