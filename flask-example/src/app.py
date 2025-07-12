@@ -5,11 +5,14 @@ import threading
 import yaml
 
 from flask import Flask, jsonify, request
-
 from pyxxl import ExecutorConfig, PyxxlRunner, JobHandler
-
 from prometheus_client import generate_latest, CollectorRegistry, Gauge
 from prometheus_client import Summary
+
+from log import logger_style_handler
+
+logging.basicConfig(level=logging.DEBUG, handlers=[logger_style_handler])
+logger = logging.getLogger('app')
 
 app = Flask(__name__)
 
@@ -19,10 +22,20 @@ with open('application.yaml', 'r') as f:
 
 xxl_handler = JobHandler()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+@app.before_request
+def logBeforeRequest():
+    app.logger.info(
+        "%s [%s] %s %s %s %s",
+        request.remote_addr,
+        # datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
+        request.method,
+        request.path,
+        request.scheme,
+        # response.status,
+        # response.content_length,
+        request.referrer,
+        request.user_agent,
+    )
 
 # Get environment variable
 API_KEY = os.environ.get("API_KEY", config.get('app', {}).get('api_key', 'default_api_key'))

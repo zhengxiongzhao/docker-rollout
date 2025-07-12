@@ -8,7 +8,7 @@ app:
 # XXL-Job Configuration
 xxl:
   enabled: false
-  debug: true
+  debug: false
   admin:
     baseurl: "http://192.168.71.8:7070/xxl-job-admin/api/"
   executor:
