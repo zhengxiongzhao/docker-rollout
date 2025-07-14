@@ -19,7 +19,7 @@ services:
   nginx-proxy:
     image: jwilder/nginx-proxy
     ports:
-      - "5001:80"
+      - "8000:80"
       - "9999:9999"
     environment:
       - TZ=Asia/Shanghai

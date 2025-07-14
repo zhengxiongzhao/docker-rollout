@@ -1,0 +1,25 @@
+services:
+  api_server:
+    image: flask-example:latest
+    ports:
+      - "8000:8000"
+      - "9999:9999"
+    environment:
+      - TZ=Asia/Shanghai
+    healthcheck:
+      # 容器基础镜像里有安装 curl。很多 alpine 或 slim 镜像默认不带 curl
+      test: curl -f http://localhost:8000/health
+      interval: 5s
+      retries: 3
+      start_period: 10s
+      timeout: 3s
+    deploy:
+      replicas: 3     ##负载个数
+      update_config: 
+        parallelism: 2  #每次更新个数
+        order: start-first        # 先启动新的，再停止旧的，保证服务不中断
+        delay: 10s              # 在更新完一个实例后，等待10秒再更新下一个，给系统稳定时间
+        failure_action: rollback  # 如果更新失败，自动回滚到上一个版本
+      restart_policy:
+        condition: on-failure
+ 

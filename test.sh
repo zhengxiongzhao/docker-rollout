@@ -2,7 +2,7 @@
 
 # 函数：测试 HTTP 端点
 test_http() {
-    URL="http://127.0.0.1:5001/health"
+    URL="http://127.0.0.1:8000/health"
     echo "Testing HTTP endpoint: $URL"
     for i in $(seq 1 120); do
       curl -o /dev/null -s -w "$(date +'%Y-%m-%d %H:%M:%S.%3N') - %{http_code}\n" "$URL"
