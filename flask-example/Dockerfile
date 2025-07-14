@@ -43,5 +43,5 @@ ENV PATH=/root/.local/bin:$PATH
 EXPOSE 5000
 EXPOSE 9999
 
-CMD ["python", "app.py"]
-# CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# CMD ["python", "app.py"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]

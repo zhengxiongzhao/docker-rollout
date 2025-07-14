@@ -1,8 +1,9 @@
 # Flask App Configuration
 app:
   host: 0.0.0.0
-  port: 5000
+  port: 8000
   debug: false
+  # workers: 1
   api_key: "default_api_key"
 
 # XXL-Job Configuration

@@ -2,23 +2,18 @@ import os
 import time
 import logging
 import threading
-import yaml
 
 from flask import Flask, jsonify, request
 from pyxxl import ExecutorConfig, PyxxlRunner, JobHandler
-from prometheus_client import generate_latest, CollectorRegistry, Gauge
-from prometheus_client import Summary
 
+from config import config
 from log import logger_style_handler
 
-logging.basicConfig(level=logging.DEBUG, handlers=[logger_style_handler])
+is_debug = config.get('app', {}).get('debug', False)
+logging.basicConfig(level=logging.DEBUG if is_debug else logging.INFO, handlers=[logger_style_handler])
 logger = logging.getLogger('app')
 
 app = Flask(__name__)
-
-# Load configuration from YAML file
-with open('application.yaml', 'r') as f:
-    config = yaml.safe_load(f)
 
 xxl_handler = JobHandler()
 
@@ -40,9 +35,8 @@ def logBeforeRequest():
 # Get environment variable
 API_KEY = os.environ.get("API_KEY", config.get('app', {}).get('api_key', 'default_api_key'))
 
-
 # Create a metric to track time spent and requests made.
-REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
+# REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -50,7 +44,6 @@ def health_check():
     return jsonify({'status': 'ok'})
 
 @app.route('/api/example', methods=['GET'])
-@REQUEST_TIME.time()
 def example_api():
     logger.info("Example API requested")
     return jsonify({'message': f'This is an example API endpoint. API_KEY: {API_KEY}'})
@@ -76,7 +69,6 @@ async def test_task3():
     logging.info("------ [demoJobHandler] executing ------")
     return "Success"
     
-
 def start_xxl_job_executor():
     """
     在一个新的线程中启动XXL-Job执行器

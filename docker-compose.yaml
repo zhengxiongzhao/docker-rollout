@@ -1,26 +1,14 @@
 services:
   api_server:
-    # image: dki.fuxiaoli.com/dev/${filename}:latest
-    # restart: always
-    # environment:
-    #   - TZ=Asia/Shanghai
-    #   - VIRTUAL_HOST=_
-    #   - VIRTUAL_PORT=8082
-    # volumes:
-    #   - /etc/localtime:/etc/localtime:ro
-    #   - ./upload:/data/app/www/cong/res/upload/
-    #   - ./logs:/data/app/logs
-    # build: 
-    #   context: "flask-example/."
     image: flask-example:latest
     pull_policy: never
     environment:
       - TZ=Asia/Shanghai
       - VIRTUAL_HOST=_
-      - VIRTUAL_PORT=5000
+      - VIRTUAL_PORT=8000
     healthcheck:
       # 容器基础镜像里有安装 curl。很多 alpine 或 slim 镜像默认不带 curl
-      test: test ! -f /tmp/drain && curl -f http://localhost:5000/health
+      test: test ! -f /tmp/drain && curl -f http://localhost:8000/health
       interval: 5s
       retries: 3
       start_period: 10s
